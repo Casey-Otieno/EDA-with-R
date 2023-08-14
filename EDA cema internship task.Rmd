@@ -1,0 +1,222 @@
+---
+title: "EDA cema internship task"
+author: "Casey Otieno"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The dataset provided contains monthly data for children <5 years, disaggregated at a county level for the period January 2021 to June 2023.
+
+The dataset contains the following varibales:
+
+* Period (months from January 2021 to June 2023)
+* County (the 47 counties in Kenya)
+* Total number of children dewormed (Total Dewormed)
+* Number of children <5 years with acute malnutrition (Acute Malnutrition)
+* Number of children stunted (0-6 months, 6-23 months, 24-59 months)
+* Number of children <5 years with diarrhe (Diarrhea cases)
+* Number of children who are underweight (0-6 months, 6-23 months, 24-59 months)
+
+#Install pre-requisite packages
+```{r}
+#install.packages("readr")
+library("readr")
+
+```
+
+# Load and explore dataset
+Load the first five rows of the dataset and summarize it.
+
+```{r}
+cema_internship_task_2023=read_csv('https://raw.githubusercontent.com/cema-uonbi/internship_task/main/data/cema_internship_task_2023.csv')
+head(cema_internship_task_2023,5)
+summary(cema_internship_task_2023)
+dim(cema_internship_task_2023)
+```
+
+# Look for missing values and clean data
+Find the total number of missing values and the number of missing values in each column if any.
+```{r}
+sum(is.na(cema_internship_task_2023))
+colSums(is.na(cema_internship_task_2023))
+
+
+#replace missing values with 0 and read the first five rows
+cema_internship_task_2023[is.na(cema_internship_task_2023)]= 0
+head(cema_internship_task_2023,5)
+```
+
+# Subsetting the dataset
+For, example, to check the number of  children in each other variable in Kajiado county in January 23rd 2023:
+
+```{r}
+num_kaj_jan_23_2023=subset(cema_internship_task_2023, cema_internship_task_2023$county=="Kajiado County" & cema_internship_task_2023$period=='Jan-23')
+num_kaj_jan_23_2023
+```
+
+
+## Data Visualization
+# What is the total number of children dewormed in each county arranged in descending order?
+```{r}
+#install.packages('tidyverse')
+#install.packages('dplyr')
+
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+
+cema_internship_task_2023 |> 
+  filter(!is.na(county)) |> 
+  group_by(county) |> 
+  summarize(`Total Dewormed` = sum(`Total Dewormed`, na.rm = T)) |> 
+  ggplot(aes(x = fct_reorder(county, `Total Dewormed`), y = `Total Dewormed`)) +
+  geom_col(width = 0.7,position =  position_dodge(0.7))+
+  theme_bw()+
+  labs(x="county", y='Total Dewormed',
+       title = "Total number of children dewormed per county")+
+    theme(text=element_text(size=7.5, face ="bold"))+
+  coord_flip()
+```
+Nairobi county has the highest number of children dewormed as shown above.
+
+# What is the total number of children with acute malnutrition in each county arrange in descending order?
+
+```{r}
+cema_internship_task_2023 |> 
+  filter(!is.na(county)) |> 
+  group_by(county) |> 
+  summarize(`Acute Malnutrition` = sum(`Acute Malnutrition`, na.rm = T)) |> 
+  ggplot(aes(x = fct_reorder(county, `Acute Malnutrition`), y = `Acute Malnutrition`)) +
+  geom_col(width = 0.7,position =  position_dodge(0.7))+
+  theme_bw()+
+  labs(x="county", y='Acute Malnutrition',
+       title = "Total number of children with Acute Malnutrition per county")+
+    theme(text=element_text(size=7.5, face ="bold"))+
+  coord_flip()
+```
+From above, Wajir county has the highest number of children with Acute malnutrition.
+
+# What is the total number of children with diarrhea cases in each county arranged in descending order?
+
+```{r}
+cema_internship_task_2023 |> 
+  filter(!is.na(county)) |> 
+  group_by(county) |> 
+  summarize(`diarrhoea cases` = sum(`diarrhoea cases`, na.rm = T)) |> 
+  ggplot(aes(x = fct_reorder(county, `diarrhoea cases`), y = `diarrhoea cases`)) +
+  geom_col(width = 0.7,position =  position_dodge(0.7))+
+  theme_bw()+
+  labs(x="county", y='diarrhoea cases',
+       title = "Total number of children with diarrhoea cases per county")+
+    theme(text=element_text(size=7.5, face ="bold"))+
+  coord_flip()
+```
+From above, Nairobi is leading with the highest number of children with diarrhoea cases.
+
+# Number of children <5 years who are underweight by age group.
+```{r}
+underweight_over_time <- cema_internship_task_2023 %>%
+ group_by(county) %>%
+ summarize(
+ Underweight_0_6_months=sum(`Underweight 0-<6 months`),
+ Underweight_6_23_months=sum(`Underweight 6-23 months`),
+ Underweight_24_59_months=sum(`Underweight 24-59 Months`)
+)
+ ggplot(data= underweight_over_time ,aes(x = fct_reorder(county, `Underweight_0_6_months`), y = `Underweight_0_6_months`)) +
+  geom_col(width = 0.7,position =  position_dodge(0.7))+
+  theme_bw()+
+  labs(x="county", y='Underweight_0_6_months',
+       title = "Total number of children Underweight_0_6_months per county")+
+    theme(text=element_text(size=7.5, face ="bold"))+
+  coord_flip() 
+ 
+  ggplot(data= underweight_over_time ,aes(x = fct_reorder(county, `Underweight_6_23_months`), y = `Underweight_6_23_months`)) +
+  geom_col(width = 0.7,position =  position_dodge(0.7))+
+  theme_bw()+
+  labs(x="county", y='Underweight_6_23_months',
+       title = "Total number of children Underweight_6_23_months per county")+
+    theme(text=element_text(size=7.5, face ="bold"))+
+  coord_flip()
+  
+ ggplot(data= underweight_over_time ,aes(x = fct_reorder(county, `Underweight_24_59_months`), y = `Underweight_24_59_months`)) +
+  geom_col(width = 0.7,position =  position_dodge(0.7))+
+  theme_bw()+
+  labs(x="county", y='Underweight_24_59_months',
+       title = "Total number of children Underweight_24_59_months per county")+
+    theme(text=element_text(size=7.5, face ="bold"))+
+  coord_flip()
+ 
+```
+the graph shows that Nairobi and Turkana county have the highest number of children underweight between 0-6, 6-23, 24-59 months while Nyamira County has the least.
+
+ Based on the exploratory data analysis above, a research question could be: Is there a relationship between the number of children dewormed and acute malnutrition  for each month. As below, the correlation coefficient is less than 0 indicating a weak linear relationship between the total number of children dewormed and prevalance of acute malnutrition.
+```{r}
+
+# Correlation analysis - Correlation between Total Dewormed and Acute Malnutrition
+correlation <- cor(cema_internship_task_2023$`Total Dewormed`, cema_internship_task_2023$`Acute Malnutrition`, use = "pairwise.complete.obs")
+print(paste("Correlation between Total Dewormed and Acute Malnutrition:", correlation))
+
+```
+
+
+# Another research question: 
+How have the rates of diarrhea cases and underweight in children under 5 years evolved over the period from January 2021 to June 2023 across different counties in Kenya?
+
+First convert period column to date format
+```{r}
+
+library(lubridate)
+char_dates=cema_internship_task_2023$period
+cema_internship_task_2023$period <- as.Date(paste0("01-", char_dates), format= "%d-%b-%y")
+
+class(cema_internship_task_2023$period)
+head(cema_internship_task_2023,3)
+```
+
+
+```{r}
+# Group the data by Period and calculate the sum of Diarrhea cases for each month
+diarrhea_over_time <- cema_internship_task_2023 %>%
+  group_by(period) %>%
+  summarize(Diarrhea_cases = sum(`diarrhoea cases`))
+
+# Line plot of Diarrhea cases over time
+ggplot(diarrhea_over_time, aes(x = period, y = Diarrhea_cases)) +
+  geom_line() +
+  theme_bw()+
+  labs(x = "Period", y = "Diarrhea Cases", title = "Number of Children <5 Years with Diarrhea Over Time")
+```
+The graph above shows an uptrend, the number of children with diarrhoea cases has increased overtime.
+```{r}
+
+# Group the data by Period and calculate the sum of Underweight cases for each age group and month
+underweight_over_time <- cema_internship_task_2023 %>%
+  group_by(period) %>%
+  summarize(
+    Underweight_0_6_months = sum(`Underweight 0-<6 months`),
+    Underweight_6_23_months = sum(`Underweight 6-23 months`),
+    Underweight_24_59_months = sum(`Underweight 24-59 Months`)
+  )
+
+# Line plot of Underweight cases by age group over time
+ggplot(underweight_over_time, aes(x = period)) +
+  geom_line(aes(y = Underweight_0_6_months, color = "0-6 months")) +
+  geom_line(aes(y = Underweight_6_23_months, color = "6-23 months")) +
+  geom_line(aes(y = Underweight_24_59_months, color = "24-59 months")) +
+  theme_bw()+
+  labs(x = "Period", y = "Underweight Cases", title = "Number of Children Who Are Underweight by Age Group Over Time") +
+  scale_color_manual(values = c("red", "blue", "green"), name = "Age Group")
+```
+From the graph above, children between the age of 6-23 months have recorded the highest number of underweight children among the other age groups, and has gradually increased over time.Children between 0-6 have less underweight cases.
+
+
+
+
